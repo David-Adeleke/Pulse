@@ -1,0 +1,127 @@
+.dashboard {
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(150deg, #0f172a, #020617 70%);
+  color: #e2e8f0;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+.dashboard__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard__eyebrow {
+  margin: 0;
+  color: #7dd3fc;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.dashboard h1 {
+  margin: 0.5rem 0;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.dashboard__subtitle {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.dashboard__search {
+  border-radius: 999px;
+  border: 1px solid #334155;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  min-width: 260px;
+  outline: none;
+}
+
+.dashboard__search:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgb(56 189 248 / 30%);
+}
+
+.dashboard__status {
+  margin-bottom: 1rem;
+}
+
+.dashboard__error {
+  color: #fecaca;
+}
+
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.quote-card {
+  background-color: rgb(15 23 42 / 70%);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.quote-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.quote-card__top h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.quote-card__badge {
+  font-size: 0.8rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.5rem;
+  font-weight: 700;
+}
+
+.quote-card__name {
+  margin: 0;
+  color: #94a3b8;
+  min-height: 40px;
+}
+
+.quote-card__price {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.quote-card__change {
+  margin: 0;
+  font-weight: 600;
+}
+
+.quote-card__prev-close {
+  margin: 0.75rem 0 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.up {
+  color: #86efac;
+  background-color: rgb(22 101 52 / 25%);
+}
+
+.down {
+  color: #fca5a5;
+  background-color: rgb(127 29 29 / 25%);
+}
+
+.dashboard__empty {
+  margin-top: 1rem;
+  color: #94a3b8;
+}
