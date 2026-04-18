@@ -8,13 +8,13 @@ const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
 const rest = restClient(API_KEY, 'https://api.massive.com')
 
 const NGX_TICKERS = [
-  { symbol: 'MTNN.LAG', name: 'MTN Nigeria' },
-  { symbol: 'DANGCEM.LAG', name: 'Dangote Cement' },
-  { symbol: 'ZENITHBANK.LAG', name: 'Zenith Bank' },
-  { symbol: 'GTCO.LAG', name: 'Guaranty Trust Holding Company' },
-  { symbol: 'SEPLAT.LAG', name: 'Seplat Energy' },
-  { symbol: 'BUACEMENT.LAG', name: 'BUA Cement' },
-  { symbol: 'ARADEL.LAG', name: 'Aradel' },
+  { symbol: 'MTNN', name: 'MTN Nigeria' },
+  { symbol: 'DANGCEM', name: 'Dangote Cement' },
+  { symbol: 'ZENITHBANK', name: 'Zenith Bank' },
+  { symbol: 'GTCO', name: 'Guaranty Trust Holding Company' },
+  { symbol: 'SEPLAT', name: 'Seplat Energy' },
+  { symbol: 'BUACEMENT', name: 'BUA Cement' },
+  { symbol: 'ARADEL', name: 'Aradel' },
 ];
 
 export const Route = createFileRoute('/dashboard')({
@@ -49,33 +49,41 @@ function Home() {
       <div className="logo-navbar">
         <div className="logo">
           <Link to='/'>
-            <h1>PULSENG</h1>
+            <h1>PULSE.NG</h1>
           </Link>
         </div>
 
         <div className="navbar-container">
-            <ul className="navbar">
-              <Link to='/'>
-                <li>Home</li>
-              </Link>
-              <Link to='/portfolios'>
-                <li>Portfolios</li>
-              </Link>
-              <Link to='/trends'>
-                <li>Market Trends</li>
-              </Link>
-              <Link to='/watchlist'>
-                <li>Watchlist</li>
-              </Link>
-            </ul>
+          <ul className="navbar">
+            <Link to='/'>
+              <li>Home</li>
+            </Link>
+            <Link to='/portfolios'>
+              <li>Portfolios</li>
+            </Link>
+            <Link to='/trends'>
+              <li>Market Trends</li>
+            </Link>
+            <Link to='/watchlist'>
+              <li>Watchlist</li>
+            </Link>
+          </ul>
         </div>
       </div>
-      {NGX_TICKERS.map((ticker) => (
-        <div key={ticker.symbol} className='ticker-container'>
-          <h1 className='ticker-symbol'>{ticker.symbol}</h1>
-          <p className='ticker-name'>{ticker.name}</p>
+      <div>
+        <div className='ticker-container'>
+          {NGX_TICKERS.map((ticker) => (
+            <div key={ticker.symbol}>
+              <div className="ticker">
+                <Link to='/ticker-profile'>
+                  <h1 className='ticker-symbol'>{ticker.symbol}</h1>
+                  <p className='ticker-name'>{ticker.name}</p>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </main>
   );
 }

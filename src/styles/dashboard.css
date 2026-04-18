@@ -1,45 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+:root {
+    --bg: #080b0f;
+    --surface: #0e1318;
+    --border: rgba(255, 255, 255, 0.07);
+    --green: #00e09e;
+    --green-dim: rgba(0, 224, 158, 0.08);
+    --text-primary: #eef0f3;
+    --text-secondary: #5a6475;
+    --text-muted: #2e3640;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+}
+
+/* ── Navbar ── */
 .dashboard-container {
-    font-family: 'Inter', sans-serif;
-    background-color: #0a0a0a;
-    color: #f0f0f0;
-    height: 100vh;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(0, 224, 158, 0.04) 0%, transparent 60%);
 }
 
 .logo-navbar {
-    border: 1px solid white;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 0rem .25rem;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background-color: rgba(8, 11, 15, 0.85);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.logo>a {
-    background-color: inherit;
+.logo a {
+    text-decoration: none;
+}
+
+.logo a h1 {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text-primary);
 }
 
 .navbar {
     display: flex;
-    gap: .5rem;
+    gap: 0.25rem;
+    list-style: none;
     align-items: center;
-    border: 1px solid white;
 }
 
-.navbar>a {
-    background-color: inherit;
-    color: #00c896;
-    font-size: 1.2rem;
+.navbar a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    transition: color 0.2s, background-color 0.2s;
 }
 
-.navbar>a:hover {
-    background-color: inherit;
-    color: #fff;
-    text-decoration: underline;
+.navbar a:hover {
+    color: var(--text-primary);
+    background-color: var(--green-dim);
+}
+
+/* ── Ticker Grid ── */
+.ticker-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    margin: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: var(--border);
+}
+
+.ticker {
+    background-color: var(--surface);
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.ticker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--green);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.ticker:hover {
+    background-color: #111820;
+}
+
+.ticker:hover::before {
+    opacity: 1;
+}
+
+.ticker-symbol {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+}
+
+.ticker-name {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.4;
 }
