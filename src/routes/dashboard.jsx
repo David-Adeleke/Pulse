@@ -2,6 +2,7 @@
 import { restClient } from '@massive.com/client-js';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
+import "../styles/dashboard.css"
 
 const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
 const rest = restClient(API_KEY, 'https://api.massive.com')
@@ -42,13 +43,13 @@ function Home() {
       console.error('An error happened', error)
     }
   }
-// listStockTickers()
+
   return (
-    <main className="dashboard">
+    <main className="dashboard-container">
       {NGX_TICKERS.map((ticker) => (
-        <div key={ticker.symbol}>
-          <h1>{ticker.symbol}</h1>
-          <p>{ticker.name}</p>
+        <div key={ticker.symbol} className='ticker-container'>
+          <h1 className='ticker-symbol'>{ticker.symbol}</h1>
+          <p className='ticker-name'>{ticker.name}</p>
         </div>
       ))}
     </main>
