@@ -13,3 +13,33 @@
     flex-direction: column;
 }
 
+.logo-navbar {
+    border: 1px solid white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0rem .25rem;
+}
+
+.logo>a {
+    background-color: inherit;
+}
+
+.navbar {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    border: 1px solid white;
+}
+
+.navbar>a {
+    background-color: inherit;
+    color: #00c896;
+    font-size: 1.2rem;
+}
+
+.navbar>a:hover {
+    background-color: inherit;
+    color: #fff;
+    text-decoration: underline;
+}
