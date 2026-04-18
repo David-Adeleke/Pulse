@@ -4,7 +4,9 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import "../styles/dashboard.css"
 
+const URL = 'https://api.massive.com'
 const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
+const limit = 20
 const rest = restClient(API_KEY, 'https://api.massive.com')
 
 const NGX_TICKERS = [
@@ -20,11 +22,9 @@ const NGX_TICKERS = [
 export const Route = createFileRoute('/dashboard')({
   component: Home,
   loader: async () => {
-    const res = await fetch(`https://api.massive.com/v3/reference/tickers?market=stocks&active=true&order=asc&limit=20&sort=ticker&apiKey=${API_KEY}`)
+    const res = await fetch(`${URL}/v3/reference/tickers?market=stocks&active=true&order=asc&limit=${limit}&sort=ticker&apiKey=${API_KEY}`)
     const data = await res.json()
-    // console.log(data)
     return { stocks: data.results }
-    // console.log(stocks)
   }
 });
 
