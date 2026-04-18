@@ -42,7 +42,7 @@ function Home() {
       console.error('An error happened', error)
     }
   }
-listStockTickers()
+// listStockTickers()
   return (
     <main className="dashboard">
       {NGX_TICKERS.map((ticker) => (
