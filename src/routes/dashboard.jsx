@@ -19,30 +19,18 @@ const NGX_TICKERS = [
 
 export const Route = createFileRoute('/dashboard')({
   component: Home,
+  loader: async () => {
+    const res = await fetch(`https://api.massive.com/v3/reference/tickers?market=stocks&active=true&order=asc&limit=20&sort=ticker&apiKey=${API_KEY}`)
+    const data = await res.json()
+    // console.log(data)
+    return { stocks: data.results }
+    // console.log(stocks)
+  }
 });
 
 function Home() {
-  const [stocks, setStocks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [lastUpdated, setLastUpdated] = useState('');
-
-  async function listStockTickers() {
-    try {
-      const response = await rest.listTickers({
-        market: "stocks",
-        active: "true",
-        order: "asc",
-        limit: '10',
-        sort: "ticker"
-      })
-      console.log(response)
-
-    } catch (error) {
-      console.error('An error happened', error)
-    }
-  }
+  const { stocks = [] } = Route.useLoaderData()
 
   return (
     <main className="dashboard-container">
@@ -72,11 +60,11 @@ function Home() {
       </div>
       <div>
         <div className='ticker-container'>
-          {NGX_TICKERS.map((ticker) => (
-            <div key={ticker.symbol}>
-              <div className="ticker">
+          {stocks.map((ticker) => (
+            <div key={ticker.ticker} className="ticker">
+              <div>
                 <Link to='/ticker-profile'>
-                  <h1 className='ticker-symbol'>{ticker.symbol}</h1>
+                  <h1 className='ticker-symbol'>{ticker.ticker}</h1>
                   <p className='ticker-name'>{ticker.name}</p>
                 </Link>
               </div>
