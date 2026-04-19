@@ -1,10 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Outlet, createRootRoute } from '@tanstack/react-router';
+import Logo from '../components/logo'
 
 export const Route = createRootRoute({
-  components: RootComponent,
+  component: RootComponent,
 });
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <>
+      <Logo />
+      <Outlet />
+    </>
+  );
 }
