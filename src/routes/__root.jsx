@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Outlet, createRootRoute } from '@tanstack/react-router';
+import { Outlet, createRootRoute, useRouterState } from '@tanstack/react-router';
 import Logo from '../components/logo'
 
 export const Route = createRootRoute({
@@ -7,9 +7,10 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
     <>
-      <Logo />
+      {pathname !== '/' && <Logo />}
       <Outlet />
     </>
   );
