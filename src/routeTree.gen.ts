@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as TrendsRouteImport } from './routes/trends'
-import { Route as TickerProfileRouteImport } from './routes/ticker-profile'
 import { Route as PortfoliosRouteImport } from './routes/portfolios'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TickerProfileSymbolRouteImport } from './routes/ticker-profile.$symbol'
 
 const WatchlistRoute = WatchlistRouteImport.update({
   id: '/watchlist',
@@ -24,11 +24,6 @@ const WatchlistRoute = WatchlistRouteImport.update({
 const TrendsRoute = TrendsRouteImport.update({
   id: '/trends',
   path: '/trends',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TickerProfileRoute = TickerProfileRouteImport.update({
-  id: '/ticker-profile',
-  path: '/ticker-profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortfoliosRoute = PortfoliosRouteImport.update({
@@ -46,31 +41,36 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TickerProfileSymbolRoute = TickerProfileSymbolRouteImport.update({
+  id: '/ticker-profile/$symbol',
+  path: '/ticker-profile/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/portfolios': typeof PortfoliosRoute
-  '/ticker-profile': typeof TickerProfileRoute
   '/trends': typeof TrendsRoute
   '/watchlist': typeof WatchlistRoute
+  '/ticker-profile/$symbol': typeof TickerProfileSymbolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/portfolios': typeof PortfoliosRoute
-  '/ticker-profile': typeof TickerProfileRoute
   '/trends': typeof TrendsRoute
   '/watchlist': typeof WatchlistRoute
+  '/ticker-profile/$symbol': typeof TickerProfileSymbolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/portfolios': typeof PortfoliosRoute
-  '/ticker-profile': typeof TickerProfileRoute
   '/trends': typeof TrendsRoute
   '/watchlist': typeof WatchlistRoute
+  '/ticker-profile/$symbol': typeof TickerProfileSymbolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,34 +78,34 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/portfolios'
-    | '/ticker-profile'
     | '/trends'
     | '/watchlist'
+    | '/ticker-profile/$symbol'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
     | '/portfolios'
-    | '/ticker-profile'
     | '/trends'
     | '/watchlist'
+    | '/ticker-profile/$symbol'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/portfolios'
-    | '/ticker-profile'
     | '/trends'
     | '/watchlist'
+    | '/ticker-profile/$symbol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   PortfoliosRoute: typeof PortfoliosRoute
-  TickerProfileRoute: typeof TickerProfileRoute
   TrendsRoute: typeof TrendsRoute
   WatchlistRoute: typeof WatchlistRoute
+  TickerProfileSymbolRoute: typeof TickerProfileSymbolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -122,13 +122,6 @@ declare module '@tanstack/react-router' {
       path: '/trends'
       fullPath: '/trends'
       preLoaderRoute: typeof TrendsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ticker-profile': {
-      id: '/ticker-profile'
-      path: '/ticker-profile'
-      fullPath: '/ticker-profile'
-      preLoaderRoute: typeof TickerProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portfolios': {
@@ -152,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ticker-profile/$symbol': {
+      id: '/ticker-profile/$symbol'
+      path: '/ticker-profile/$symbol'
+      fullPath: '/ticker-profile/$symbol'
+      preLoaderRoute: typeof TickerProfileSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -159,9 +159,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   PortfoliosRoute: PortfoliosRoute,
-  TickerProfileRoute: TickerProfileRoute,
   TrendsRoute: TrendsRoute,
   WatchlistRoute: WatchlistRoute,
+  TickerProfileSymbolRoute: TickerProfileSymbolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
