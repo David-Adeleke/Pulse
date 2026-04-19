@@ -13,13 +13,27 @@ export const Route = createFileRoute('/dashboard')({
   loader: async () => {
     const res = await fetch(`${URL}/v3/reference/tickers?market=stocks&active=true&order=asc&limit=${limit}&sort=ticker&apiKey=${API_KEY}`)
     const data = await res.json()
-    return { stocks: data.results }
+    return { stocks: data.results, nextUrl: data.next_url }
   }
 });
 
 function Home() {
-  const [loading, setLoading] = useState(true);
-  const { stocks = [] } = Route.useLoaderData()
+  const { stocks: initial, nextUrl: initialNextUrl } = Route.useLoaderData()
+  const [stocks, setStocks] = useState(Array.isArray(initial) ? initial : [])
+  const [nextUrl, setNextUrl] = useState(initialNextUrl)
+  const [loading, setLoading] = useState(false);
+
+  async function loadMore() {
+    if (!nextUrl) return
+    setLoading(true)
+    const res = await fetch(`${nextUrl}&apiKey=${API_KEY}`)
+    const data = await res.json()
+    if (Array.isArray(data.results)) {
+      setStocks(prev => [...prev, ...data.results])
+      setNextUrl(data.next_url)
+    }
+    setLoading(false)
+  }
 
   return (
     <main className={styles['dashboard-container']}>
@@ -36,6 +50,13 @@ function Home() {
             </div>
           ))}
         </div>
+        {nextUrl && (
+          <button className={styles['load-more']}
+            onClick={loadMore}
+            disabled={loading}>
+            {loading ? 'Loading...' : 'Next'}
+          </button>
+        )}
       </div>
     </main>
   );
