@@ -113,3 +113,39 @@ body {
     opacity: 0.4;
     cursor: not-allowed;
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.page-btn {
+    background-color: transparent;
+    border: 1px solid #00e09e;
+    color: #00e09e;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: #00e09e;
+    color: #080b0f;
+}
+
+.page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: #5a6475;
+}

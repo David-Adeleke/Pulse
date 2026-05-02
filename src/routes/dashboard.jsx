@@ -21,18 +21,42 @@ function Home() {
   const { stocks: initial, nextUrl: initialNextUrl } = Route.useLoaderData()
   const [stocks, setStocks] = useState(Array.isArray(initial) ? initial : [])
   const [nextUrl, setNextUrl] = useState(initialNextUrl)
+  const [urlHistory, setUrlHistory] = useState([])
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1)
 
-  async function loadMore() {
-    if (!nextUrl) return
+  async function fetchPage(url) {
     setLoading(true)
-    const res = await fetch(`${nextUrl}&apiKey=${API_KEY}`)
+    const res = await fetch(`${url}&apiKey=${API_KEY}`)
     const data = await res.json()
     if (Array.isArray(data.results)) {
-      setStocks(prev => [...prev, ...data.results])
+      setStocks(prev => data.results)
       setNextUrl(data.next_url)
     }
     setLoading(false)
+  }
+
+  async function nextPage() {
+    if (!nextUrl) return
+    setUrlHistory(prev => [...prev, nextUrl])
+    await fetchPage(nextUrl)
+    setPage(prev => prev + 1)
+  }
+
+  async function prevPage() {
+    if (urlHistory.length === 0) return
+    const history = [...urlHistory]
+    const prevUrl = history[history.length - 2]
+    history.pop()
+    setUrlHistory(history)
+
+    if (history.length === 0) {
+      setStocks(Array.isArray(initial) ? initial : [])
+      setNextUrl(initialNextUrl)
+    } else {
+      await fetchPage(prevUrl)
+    }
+    setPage(prev => prev - 1)
   }
 
   return (
@@ -50,13 +74,23 @@ function Home() {
             </div>
           ))}
         </div>
-        {nextUrl && (
-          <button className={styles['load-more']}
-            onClick={loadMore}
-            disabled={loading}>
+        <div className={styles.pagination}>
+          <button
+            className={styles['page-btn']}
+            onClick={prevPage}
+            disabled={page === 1 || loading}>
+            Prev
+          </button>
+
+          <span className={styles['page-number']}>Page {page}</span>
+
+          <button
+            className={styles['page-btn']}
+            onClick={nextPage}
+            disabled={!nextUrl || loading}>
             {loading ? 'Loading...' : 'Next'}
           </button>
-        )}
+        </div>
       </div>
     </main>
   );
