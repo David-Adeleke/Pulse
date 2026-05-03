@@ -10,6 +10,7 @@ const limit = 20
 
 export const Route = createFileRoute('/dashboard')({
   component: Home,
+  staleTime: 5 * 60 * 1000,
   loader: async () => {
     const res = await fetch(`${URL}/v3/reference/tickers?market=stocks&active=true&order=asc&limit=${limit}&sort=ticker&apiKey=${API_KEY}`)
     const data = await res.json()

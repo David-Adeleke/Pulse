@@ -28,11 +28,6 @@ export const Route = createFileRoute('/ticker-profile/$symbol')({
   }
 })
 
-// const formatted = candles.map(c => ({
-//   time: c.t,
-//   close: c.c
-// }))
-
 function SimpleChart({ data }) {
   if (!data.length) return null
 
@@ -43,7 +38,7 @@ function SimpleChart({ data }) {
   const min = Math.min(...data.map(d => d.close))
 
   const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * width
+    const x = data.length > 1 ? (i / (data.length - 1)) * width : width / 2
     const range = max - min || 1
     const y = height - ((d.close - min) / range) * height
     return `${x},${y}`
@@ -62,7 +57,7 @@ function SimpleChart({ data }) {
 }
 
 function RouteComponent() {
-  const { ticker = {}, quote = null, candles } = Route.useLoaderData()
+  const { ticker = {}, quote = null, candles = [] } = Route.useLoaderData()
   const router = useRouter()
 
   const chartData = candles.map(c => ({
@@ -78,7 +73,7 @@ function RouteComponent() {
           <h1>{ticker?.ticker ?? '-'}</h1>
           <p>{ticker?.name ?? '-'}</p>
         </div>
-        
+
         <SimpleChart data={chartData} />
 
         {quote && (
@@ -126,7 +121,7 @@ function RouteComponent() {
           </div>
           <div className={styles['financial-item']}>
             <p className={styles['financial-label']}>Volume</p>
-            <p className={styles['financial-value']}>${quote?.v?.toLocaleString() ?? '—'}</p>
+            <p className={styles['financial-value']}>{quote?.v?.toLocaleString() ?? '—'}</p>
           </div>
         </div>
       </div>
