@@ -13,12 +13,42 @@ export const Route = createFileRoute('/dashboard')({
   loader: async () => {
     const res = await fetch(`${URL}/v3/reference/tickers?market=stocks&active=true&order=asc&limit=${limit}&sort=ticker&apiKey=${API_KEY}`)
     const data = await res.json()
-    return { stocks: data.results, nextUrl: data.next_url }
+
+    const stocks = data.results || []
+
+    const prices = await Promise.all(
+      stocks.map(async (stock) => {
+        try {
+          const res = await fetch(`${URL}/v2/aggs/ticker/${stock.ticker}/prev?apiKey=${API_KEY}`)
+          const json = await res.json()
+          return {
+            symbol: stock.ticker,
+            close: json.results?.[0]?.c ?? null
+          }
+        } catch {
+          return { symbol: stock.ticker, close: null }
+        }
+      })
+    )
+
+    const priceMap = Object.fromEntries(
+      prices.map(p => [p.symbol, p.close])
+    )
+
+    const validateStocks = stocks.filter(
+      stock => priceMap[stock.ticker] !== null
+    )
+
+    return {
+      stocks,
+      nextUrl: data.next_url,
+      priceMap
+    }
   }
 });
 
 function Home() {
-  const { stocks: initial, nextUrl: initialNextUrl } = Route.useLoaderData()
+  const { stocks: initial, nextUrl: initialNextUrl, priceMap } = Route.useLoaderData()
   const [stocks, setStocks] = useState(Array.isArray(initial) ? initial : [])
   const [nextUrl, setNextUrl] = useState(initialNextUrl)
   const [urlHistory, setUrlHistory] = useState([])
@@ -67,7 +97,12 @@ function Home() {
             <div key={ticker.ticker} className={styles.ticker}>
               <div>
                 <Link to='/ticker-profile/$symbol' params={{ symbol: ticker.ticker }}>
-                  <h1 className={styles['ticker-symbol']}>{ticker.ticker}</h1>
+                  <h1 className={styles['ticker-symbol']}>
+                    {ticker.ticker}
+                    <span className={styles['ticker-price']}>
+                      ${priceMap?.[ticker.ticker]?.toLocaleString() ?? '-'}
+                    </span>
+                  </h1>
                   <p className={styles['ticker-name']}>{ticker.name}</p>
                 </Link>
               </div>
