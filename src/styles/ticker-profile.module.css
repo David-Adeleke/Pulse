@@ -49,19 +49,23 @@ body {
 
 /* ── Financials ── */
 .ticker-financials {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1px;
-    background-color: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
     margin-bottom: 2rem;
 }
 
 .financial-item {
-    background-color: var(--surface);
-    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    background: none;
+}
+
+.financial-item:last-child {
+    border-bottom: none;
 }
 
 .financial-label {
@@ -69,12 +73,35 @@ body {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
 }
 
 .financial-value {
     font-family: var(--font-mono);
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--text-primary);
+}
+
+.ticker-financials:first-of-type .financial-item:first-child .financial-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.back {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+}
+
+.back:hover {
+    color: var(--green);
 }
