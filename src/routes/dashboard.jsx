@@ -9,14 +9,19 @@ const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
 const limit = 20;
 const PRICE_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
 const GROUPED_LOOKBACK_DAYS = 7;
-const FALLBACK_SYMBOL_BATCH_SIZE = 5;
+const GROUPED_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
+const FALLBACK_MAX_RETRIES = 4;
+const FALLBACK_BASE_DELAY_MS = 350;
+const FALLBACK_GAP_MS = 120;
 
-function chunkSymbols(symbols, size) {
-  const chunks = [];
-  for (let index = 0; index < symbols.length; index += size) {
-    chunks.push(symbols.slice(index, index + size));
-  }
-  return chunks;
+let groupedCloseMapCache = null;
+let groupedCloseMapCacheAt = 0;
+let groupedCloseMapPromise = null;
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function toDateKey(date) {
@@ -59,67 +64,116 @@ async function fetchGroupedCloseMapForDate(dateKey) {
   return prices;
 }
 
-async function fetchGroupedPrices(symbols) {
-  const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
-  if (!uniqueSymbols.length) return {};
-  const symbolSet = new Set(uniqueSymbols);
-  const mergedPrices = {};
+async function fetchLatestGroupedMarketMap() {
   const dateKeys = getRecentDateKeys(GROUPED_LOOKBACK_DAYS);
 
   for (const dateKey of dateKeys) {
-    let groupedPriceMap = {};
-
     try {
-      groupedPriceMap = await fetchGroupedCloseMapForDate(dateKey);
-    } catch {
-      // Keep trying older dates for market-close gaps.
-      continue;
-    }
-
-    Object.entries(groupedPriceMap).forEach(([symbol, price]) => {
-      if (symbolSet.has(symbol) && typeof price === 'number' && mergedPrices[symbol] === undefined) {
-        mergedPrices[symbol] = price;
+      const groupedPriceMap = await fetchGroupedCloseMapForDate(dateKey);
+      if (Object.keys(groupedPriceMap).length > 0) {
+        return groupedPriceMap;
       }
-    });
-
-    if (Object.keys(mergedPrices).length === uniqueSymbols.length) {
-      break;
+    } catch {
+      continue;
     }
   }
 
-  return mergedPrices;
+  return {};
+}
+
+async function getGroupedMarketMap() {
+  const now = Date.now();
+  const hasFreshCache =
+    groupedCloseMapCache !== null && now - groupedCloseMapCacheAt <= GROUPED_CACHE_MAX_AGE_MS;
+
+  if (hasFreshCache) {
+    return groupedCloseMapCache;
+  }
+
+  if (!groupedCloseMapPromise) {
+    groupedCloseMapPromise = fetchLatestGroupedMarketMap()
+      .then((result) => {
+        groupedCloseMapCache = result;
+        groupedCloseMapCacheAt = Date.now();
+        return result;
+      })
+      .finally(() => {
+        groupedCloseMapPromise = null;
+      });
+  }
+
+  return groupedCloseMapPromise;
+}
+
+async function fetchGroupedPrices(symbols) {
+  const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
+  if (!uniqueSymbols.length) return {};
+
+  const marketMap = await getGroupedMarketMap();
+  const result = {};
+
+  uniqueSymbols.forEach((symbol) => {
+    const value = marketMap?.[symbol];
+    if (typeof value === 'number') {
+      result[symbol] = value;
+    }
+  });
+
+  return result;
+}
+
+function parseRetryAfterMs(response) {
+  const raw = response.headers.get('Retry-After');
+  if (!raw) return null;
+
+  const asSeconds = Number(raw);
+  if (Number.isFinite(asSeconds) && asSeconds > 0) {
+    return asSeconds * 1000;
+  }
+
+  const asDate = Date.parse(raw);
+  if (Number.isNaN(asDate)) return null;
+
+  const delta = asDate - Date.now();
+  return delta > 0 ? delta : null;
 }
 
 async function fetchPreviousClosePrice(symbol) {
-  const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
-  const response = await fetch(`${URL}/v2/aggs/ticker/${symbol}/prev?${query.toString()}`);
+  for (let attempt = 0; attempt < FALLBACK_MAX_RETRIES; attempt += 1) {
+    const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
+    const response = await fetch(`${URL}/v2/aggs/ticker/${symbol}/prev?${query.toString()}`);
 
-  if (!response.ok) return null;
+    if (response.ok) {
+      const data = await response.json();
+      const close = data?.results?.[0]?.c;
+      return typeof close === 'number' ? close : null;
+    }
 
-  const data = await response.json();
-  const close = data?.results?.[0]?.c;
-  return typeof close === 'number' ? close : null;
+    const isRetriable = response.status === 429 || response.status >= 500;
+    if (!isRetriable) {
+      return null;
+    }
+
+    const retryAfterMs = parseRetryAfterMs(response);
+    const backoffMs = FALLBACK_BASE_DELAY_MS * (attempt + 1);
+    await sleep(retryAfterMs ?? backoffMs);
+  }
+
+  return null;
 }
 
 async function fetchPrevClosePrices(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
+
   const priceMap = {};
-  const batches = chunkSymbols(uniqueSymbols, FALLBACK_SYMBOL_BATCH_SIZE);
 
-  for (const batch of batches) {
-    const results = await Promise.all(
-      batch.map(async (symbol) => {
-        const close = await fetchPreviousClosePrice(symbol);
-        return { symbol, close };
-      })
-    );
-
-    results.forEach(({ symbol, close }) => {
-      if (typeof close === 'number') {
-        priceMap[symbol] = close;
-      }
-    });
+  for (const symbol of uniqueSymbols) {
+    const close = await fetchPreviousClosePrice(symbol);
+    if (typeof close === 'number') {
+      priceMap[symbol] = close;
+    }
+    await sleep(FALLBACK_GAP_MS);
   }
 
   return priceMap;
@@ -187,7 +241,7 @@ function Home() {
     }
 
     const { cachedPrices, symbolsToRefresh } = getCachedPrices(symbols, PRICE_CACHE_MAX_AGE_MS);
-    setPriceMap(cachedPrices);
+    setPriceMap((prev) => ({ ...prev, ...cachedPrices }));
 
     if (!symbolsToRefresh.length) {
       setRefreshingPrices(false);
@@ -282,7 +336,7 @@ function Home() {
           <p className={styles.overline}>Market Overview</p>
           <h1 className={styles.title}>Active Stocks</h1>
           <p className={styles.subtitle}>
-            Prices are loaded from bulk market data endpoints and cached locally for faster reloads.
+            Prices are loaded from grouped market data first, then throttled per-symbol fallback, and cached locally.
           </p>
         </div>
         <div className={styles.metrics}>

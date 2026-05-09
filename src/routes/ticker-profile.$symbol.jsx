@@ -92,7 +92,6 @@ function RouteComponent() {
       <section className={styles.chartCard}>
         <div className={styles.chartTop}>
           <p>Price Trend</p>
-          <span>Daily close</span>
         </div>
         <SimpleChart data={chartData} />
       </section>
