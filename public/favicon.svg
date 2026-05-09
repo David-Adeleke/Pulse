@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Pulse logo">
+  <defs>
+    <linearGradient id="pulseGradient" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00f5b0" />
+      <stop offset="1" stop-color="#00c389" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="#0b1119" />
+  <rect x="4.5" y="4.5" width="55" height="55" rx="15.5" fill="none" stroke="rgba(255,255,255,0.14)" />
+  <path
+    d="M12 36h10l4-11 7 24 7-18 3 5h9"
+    fill="none"
+    stroke="url(#pulseGradient)"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="26" cy="25" r="2.2" fill="#00f5b0" />
+</svg>

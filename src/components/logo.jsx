@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import styles from '../styles/logo.module.css';
 
+const brandIcon = '/favicon.svg';
+
 const navItems = [
   { to: '/dashboard', label: 'Home' },
   { to: '/portfolios', label: 'Portfolios' },
@@ -46,7 +48,10 @@ export default function Logo() {
   return (
     <header className={styles.logoNavbar} ref={headerRef}>
       <Link to='/' className={styles.brand} onClick={() => setOpen(false)}>
-        PULSE.NG
+        <span className={styles.brandInner}>
+          <img src={brandIcon} alt='' aria-hidden='true' className={styles.brandIcon} />
+          <span className={styles.brandText}>PULSE.NG</span>
+        </span>
       </Link>
 
       <button
