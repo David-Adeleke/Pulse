@@ -1,22 +1,31 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getCachedPrices, storePrices } from '../lib/price-cache';
+import { getCachedIndustries, normalizeIndustry, storeIndustries } from '../lib/ticker-metadata-cache';
 import styles from '../styles/dashboard.module.css';
 
 const URL = 'https://api.massive.com';
 const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
 const limit = 20;
 const PRICE_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
+const INDUSTRY_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const GROUPED_LOOKBACK_DAYS = 7;
 const GROUPED_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
 const FALLBACK_MAX_RETRIES = 4;
 const FALLBACK_BASE_DELAY_MS = 350;
 const FALLBACK_GAP_MS = 120;
+const INDUSTRY_LOOKUP_GAP_MS = 80;
 
 let groupedCloseMapCache = null;
 let groupedCloseMapCacheAt = 0;
 let groupedCloseMapPromise = null;
+
+const TYPE_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'stock', label: 'Stocks' },
+  { value: 'etf', label: 'ETFs' },
+];
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -38,6 +47,15 @@ function getRecentDateKeys(days) {
   }
 
   return keys;
+}
+
+function normalizeTickerType(rawType) {
+  const type = String(rawType ?? '').toUpperCase();
+  return type.includes('ETF') ? 'etf' : 'stock';
+}
+
+function tickerTypeLabel(rawType) {
+  return normalizeTickerType(rawType) === 'etf' ? 'ETF' : 'Stock';
 }
 
 async function fetchGroupedCloseMapForDate(dateKey) {
@@ -194,6 +212,32 @@ async function fetchBulkPrices(symbols) {
   return { ...grouped, ...fallback };
 }
 
+async function fetchIndustryForTicker(symbol) {
+  const query = new URLSearchParams({ apiKey: API_KEY });
+  const response = await fetch(`${URL}/v3/reference/tickers/${symbol}?${query.toString()}`);
+
+  if (!response.ok) {
+    return normalizeIndustry(null);
+  }
+
+  const data = await response.json();
+  return normalizeIndustry(data?.results?.sic_description);
+}
+
+async function fetchIndustries(symbols) {
+  const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
+  if (!uniqueSymbols.length) return {};
+
+  const result = {};
+
+  for (const symbol of uniqueSymbols) {
+    result[symbol] = await fetchIndustryForTicker(symbol);
+    await sleep(INDUSTRY_LOOKUP_GAP_MS);
+  }
+
+  return result;
+}
+
 function formatPrice(value) {
   return typeof value === 'number' ? `$${value.toLocaleString()}` : '—';
 }
@@ -225,11 +269,18 @@ function Home() {
   const initialSymbols = initialStocks.map((stock) => stock.ticker);
   const [stocks, setStocks] = useState(initialStocks);
   const [priceMap, setPriceMap] = useState(() => getCachedPrices(initialSymbols, PRICE_CACHE_MAX_AGE_MS).cachedPrices);
+  const [industryMap, setIndustryMap] = useState(
+    () => getCachedIndustries(initialSymbols, INDUSTRY_CACHE_MAX_AGE_MS).cachedIndustries
+  );
   const [nextUrl, setNextUrl] = useState(initialNextUrl);
   const [urlHistory, setUrlHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
+  const [loadingIndustries, setLoadingIndustries] = useState(false);
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [industryFilter, setIndustryFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const symbols = stocks.map((stock) => stock.ticker);
@@ -273,6 +324,78 @@ function Home() {
       cancelled = true;
     };
   }, [stocks]);
+
+  useEffect(() => {
+    const symbols = stocks.map((stock) => stock.ticker);
+
+    if (!symbols.length) {
+      setLoadingIndustries(false);
+      return;
+    }
+
+    const { cachedIndustries, symbolsToRefresh } = getCachedIndustries(symbols, INDUSTRY_CACHE_MAX_AGE_MS);
+    setIndustryMap((prev) => ({ ...prev, ...cachedIndustries }));
+
+    if (!symbolsToRefresh.length) {
+      setLoadingIndustries(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingIndustries(true);
+
+    async function refreshIndustries() {
+      try {
+        const freshIndustries = await fetchIndustries(symbolsToRefresh);
+        if (cancelled) return;
+
+        setIndustryMap((prev) => ({ ...prev, ...freshIndustries }));
+        storeIndustries(freshIndustries);
+      } catch (error) {
+        console.error('Failed to refresh ticker industries.', error);
+      } finally {
+        if (!cancelled) {
+          setLoadingIndustries(false);
+        }
+      }
+    }
+
+    void refreshIndustries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [stocks]);
+
+  const industryOptions = useMemo(() => {
+    const labels = new Set();
+    stocks.forEach((stock) => {
+      labels.add(normalizeIndustry(industryMap[stock.ticker]));
+    });
+    return [...labels].sort((a, b) => a.localeCompare(b));
+  }, [stocks, industryMap]);
+
+  useEffect(() => {
+    if (industryFilter !== 'all' && !industryOptions.includes(industryFilter)) {
+      setIndustryFilter('all');
+    }
+  }, [industryFilter, industryOptions]);
+
+  const filteredStocks = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return stocks.filter((stock) => {
+      const matchesType = typeFilter === 'all' || normalizeTickerType(stock.type) === typeFilter;
+      const matchesIndustry =
+        industryFilter === 'all' || normalizeIndustry(industryMap[stock.ticker]) === industryFilter;
+      const matchesSearch =
+        !query ||
+        stock.ticker?.toLowerCase().includes(query) ||
+        stock.name?.toLowerCase().includes(query);
+
+      return matchesType && matchesIndustry && matchesSearch;
+    });
+  }, [stocks, typeFilter, industryFilter, searchTerm, industryMap]);
 
   async function fetchPage(url) {
     setLoading(true);
@@ -327,7 +450,7 @@ function Home() {
     }
   }
 
-  const pricedCount = stocks.filter((stock) => typeof priceMap?.[stock.ticker] === 'number').length;
+  const visiblePriceCount = filteredStocks.filter((stock) => typeof priceMap?.[stock.ticker] === 'number').length;
 
   return (
     <main className={styles.dashboardContainer}>
@@ -336,17 +459,21 @@ function Home() {
           <p className={styles.overline}>Market Overview</p>
           <h1 className={styles.title}>Active Stocks</h1>
           <p className={styles.subtitle}>
-            Prices are loaded from grouped market data first, then throttled per-symbol fallback, and cached locally.
+            Filter by type, filter by industry, and search symbols instantly on each page.
           </p>
         </div>
         <div className={styles.metrics}>
           <div className={styles.metricItem}>
-            <span>Symbols</span>
+            <span>Page Symbols</span>
             <strong>{stocks.length}</strong>
           </div>
           <div className={styles.metricItem}>
+            <span>Showing</span>
+            <strong>{filteredStocks.length}</strong>
+          </div>
+          <div className={styles.metricItem}>
             <span>With Price</span>
-            <strong>{pricedCount}</strong>
+            <strong>{visiblePriceCount}</strong>
           </div>
           <div className={styles.metricItem}>
             <span>Price Sync</span>
@@ -355,19 +482,83 @@ function Home() {
         </div>
       </header>
 
+      <section className={styles.controlsPanel}>
+        <div className={styles.searchBox}>
+          <label htmlFor='ticker-search' className={styles.controlLabel}>
+            Search
+          </label>
+          <input
+            id='ticker-search'
+            type='text'
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder='Search by ticker or company name'
+            className={styles.searchInput}
+          />
+        </div>
+
+        <div className={styles.filterRow}>
+          <div className={styles.typeFilters} role='group' aria-label='Filter by ticker type'>
+            {TYPE_FILTERS.map((option) => (
+              <button
+                key={option.value}
+                type='button'
+                onClick={() => setTypeFilter(option.value)}
+                className={`${styles.filterButton} ${
+                  typeFilter === option.value ? styles.filterButtonActive : ''
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <label className={styles.industryField}>
+            <span className={styles.controlLabel}>Industry</span>
+            <select
+              value={industryFilter}
+              onChange={(event) => setIndustryFilter(event.target.value)}
+              className={styles.industrySelect}
+            >
+              <option value='all'>All industries</option>
+              {industryOptions.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <p className={styles.filterSummary}>
+          {loadingIndustries ? 'Updating industries...' : 'Industry data ready'}
+        </p>
+      </section>
+
       <section className={styles.tickerContainer}>
-        {stocks.map((ticker) => (
-          <article key={ticker.ticker} className={styles.tickerCard}>
-            <Link to='/ticker-profile/$symbol' params={{ symbol: ticker.ticker }} className={styles.tickerLink}>
-              <div className={styles.tickerTop}>
-                <h2 className={styles.tickerSymbol}>{ticker.ticker}</h2>
-                <span className={styles.tickerPrice}>{formatPrice(priceMap?.[ticker.ticker])}</span>
-              </div>
-              <p className={styles.tickerName}>{ticker.name}</p>
-              <span className={styles.tickerCta}>View details →</span>
-            </Link>
+        {filteredStocks.length === 0 ? (
+          <article className={styles.emptyState}>
+            <h2>No matching symbols</h2>
+            <p>Try a different search term or change your type/industry filters.</p>
           </article>
-        ))}
+        ) : (
+          filteredStocks.map((ticker) => (
+            <article key={ticker.ticker} className={styles.tickerCard}>
+              <Link to='/ticker-profile/$symbol' params={{ symbol: ticker.ticker }} className={styles.tickerLink}>
+                <div className={styles.tickerTop}>
+                  <h2 className={styles.tickerSymbol}>{ticker.ticker}</h2>
+                  <span className={styles.tickerPrice}>{formatPrice(priceMap?.[ticker.ticker])}</span>
+                </div>
+                <p className={styles.tickerName}>{ticker.name}</p>
+                <div className={styles.tickerMeta}>
+                  <span className={styles.typeBadge}>{tickerTypeLabel(ticker.type)}</span>
+                  <span className={styles.industryBadge}>{normalizeIndustry(industryMap[ticker.ticker])}</span>
+                </div>
+                <span className={styles.tickerCta}>View details →</span>
+              </Link>
+            </article>
+          ))
+        )}
       </section>
 
       <div className={styles.pagination}>
