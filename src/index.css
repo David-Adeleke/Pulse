@@ -1,1 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+:root {
+  --bg: #080b0f;
+  --surface: #0f1620;
+  --surface-2: #141f2d;
+  --border: rgba(255, 255, 255, 0.08);
+  --text-primary: #eaf1f7;
+  --text-secondary: #8b9aae;
+  --green: #00e09e;
+  --green-dim: rgba(0, 224, 158, 0.12);
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1000px 500px at 15% -10%, rgba(0, 224, 158, 0.12) 0%, rgba(0, 224, 158, 0) 60%),
+    radial-gradient(800px 420px at 100% 0%, rgba(34, 101, 255, 0.12) 0%, rgba(34, 101, 255, 0) 65%),
+    var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+a {
+  color: inherit;
+}

@@ -1,107 +1,119 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-:root {
-    --bg: #080b0f;
-    --surface: #0e1318;
-    --surface-2: #141b23;
-    --border: rgba(255, 255, 255, 0.07);
-    --green: #00e09e;
-    --green-dim: rgba(0, 224, 158, 0.08);
-    --text-primary: #eef0f3;
-    --text-secondary: #5a6475;
-    --font-mono: 'Space Mono', monospace;
-    --font-body: 'DM Sans', sans-serif;
-}
-
-body {
-    background-color: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-}
-
-.ticker-profile-container {
-    max-width: 900px;
-    margin: 3rem auto;
-    padding: 0 1.5rem;
-}
-
-/* ── Header ── */
-.ticker-info {
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
-}
-
-.ticker-info h1 {
-    font-family: var(--font-mono);
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--green);
-    letter-spacing: 0.05em;
-    margin-bottom: 0.4rem;
-}
-
-.ticker-info p {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-}
-
-/* ── Financials ── */
-.ticker-financials {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-    margin-bottom: 2rem;
-}
-
-.financial-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid var(--border);
-    background: none;
-}
-
-.financial-item:last-child {
-    border-bottom: none;
-}
-
-.financial-label {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.financial-value {
-    font-family: var(--font-mono);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.ticker-financials:first-of-type .financial-item:first-child .financial-value {
-    font-size: 1.8rem;
-    font-weight: 700;
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1.2rem 3rem;
 }
 
 .back {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    transition: color 0.2s;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .back:hover {
-    color: var(--green);
+  color: var(--green);
+  border-color: rgba(0, 224, 158, 0.35);
+}
+
+.headerCard,
+.chartCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  padding: 1.2rem;
+}
+
+.headerCard {
+  margin-bottom: 1rem;
+}
+
+.symbol {
+  margin: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--green);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.company {
+  margin: 0.55rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.chartTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.chartTop p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.chartTop span {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chartFrame {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 0.4rem;
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  display: block;
+}
+
+.emptyChart {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.metricsGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.metricCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 0.9rem;
+}
+
+.metricLabel {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.metricValue {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-primary);
 }

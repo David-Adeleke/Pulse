@@ -1,161 +1,174 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+.dashboardContainer {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 2rem 1.2rem 3rem;
 }
 
-:root {
-    --bg: #080b0f;
-    --surface: #0e1318;
-    --border: rgba(255, 255, 255, 0.07);
-    --green: #00e09e;
-    --green-dim: rgba(0, 224, 158, 0.08);
-    --text-primary: #eef0f3;
-    --text-secondary: #5a6475;
-    --text-muted: #2e3640;
-    --font-mono: 'Space Mono', monospace;
-    --font-body: 'DM Sans', sans-serif;
+.header {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  padding: 1.35rem;
+  margin-bottom: 1.1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
 }
 
-body {
-    background-color: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    min-height: 100vh;
+.overline {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
 }
 
-/* ── Navbar ── */
-.dashboard-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-image: radial-gradient(ellipse at 20% 0%, rgba(0, 224, 158, 0.04) 0%, transparent 60%);
+.title {
+  margin: 0.45rem 0 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  letter-spacing: -0.02em;
 }
 
-/* ── Ticker Grid ── */
-.ticker-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1px;
-    margin: 2rem;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    background-color: var(--border);
+.subtitle {
+  margin: 0.55rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.94rem;
 }
 
-.ticker {
-    background-color: var(--surface);
-    padding: 1.25rem 1.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    position: relative;
+.metrics {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
 }
 
-.ticker::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background-color: var(--green);
-    opacity: 0;
-    transition: opacity 0.2s;
+.metricItem {
+  border: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  min-width: 92px;
+  padding: 0.55rem 0.75rem;
 }
 
-.ticker:hover {
-    background-color: #111820;
+.metricItem span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 
-.ticker:hover::before {
-    opacity: 1;
+.metricItem strong {
+  font-family: var(--font-mono);
+  color: var(--green);
+  font-size: 1rem;
 }
 
-.ticker-symbol {
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: 0.05em;
-    margin-bottom: 0.4rem;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.6rem;
+.tickerContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 0.75rem;
 }
 
-.ticker-price {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.tickerCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+  transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
-.ticker-name {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-    line-height: 1.4;
+.tickerCard:hover {
+  border-color: rgba(0, 224, 158, 0.35);
+  transform: translateY(-2px);
 }
 
-.load-more {
-    display: block;
-    margin: 2rem auto;
-    padding: 0.75rem 2.5rem;
-    background-color: transparent;
-    border: 1px solid #00e09e;
-    color: #00e09e;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+.tickerLink {
+  display: block;
+  text-decoration: none;
+  padding: 0.95rem;
 }
 
-.load-more:hover {
-    background-color: #00e09e;
-    color: #080b0f;
+.tickerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem;
 }
 
-.load-more:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.tickerSymbol {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+.tickerPrice {
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.tickerName {
+  margin: 0.45rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  font-size: 0.87rem;
+  min-height: 2.5rem;
+}
+
+.tickerCta {
+  display: inline-flex;
+  margin-top: 0.9rem;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  opacity: 0.82;
 }
 
 .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
-.page-btn {
-    background-color: transparent;
-    border: 1px solid #00e09e;
-    color: #00e09e;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+.pageBtn {
+  padding: 0.58rem 1.15rem;
+  border-radius: 8px;
+  border: 1px solid var(--green);
+  background-color: transparent;
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
 
-.page-btn:hover:not(:disabled) {
-    background-color: #00e09e;
-    color: #080b0f;
+.pageBtn:hover:not(:disabled) {
+  background-color: var(--green);
+  color: #06271e;
 }
 
-.page-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+.pageBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
-.page-number {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    color: #5a6475;
+.pageNumber {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 700px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    width: 100%;
+  }
+
+  .metricItem {
+    flex: 1;
+  }
 }

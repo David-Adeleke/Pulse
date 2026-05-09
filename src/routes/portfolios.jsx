@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
+import ComingSoon from '../components/coming-soon';
 
 export const Route = createFileRoute('/portfolios')({
   component: RouteComponent,
@@ -6,8 +7,9 @@ export const Route = createFileRoute('/portfolios')({
 
 function RouteComponent() {
   return (
-    <>
-      <div>Hello "/portfolio"!</div>
-    </>
-  )
+    <ComingSoon
+      title='Portfolio Tracking'
+      description='Portfolio tools are in progress with cleaner allocation views and richer performance snapshots.'
+    />
+  );
 }
