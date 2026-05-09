@@ -8,7 +8,8 @@ const URL = 'https://api.massive.com';
 const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
 const limit = 20;
 const PRICE_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
-const SNAPSHOT_CHUNK_SIZE = 40;
+const GROUPED_LOOKBACK_DAYS = 7;
+const FALLBACK_SYMBOL_BATCH_SIZE = 5;
 
 function chunkSymbols(symbols, size) {
   const chunks = [];
@@ -18,45 +19,37 @@ function chunkSymbols(symbols, size) {
   return chunks;
 }
 
-function resolveSnapshotSymbol(snapshot) {
-  return snapshot?.ticker ?? snapshot?.symbol ?? snapshot?.details?.ticker ?? null;
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10);
 }
 
-function resolveSnapshotPrice(snapshot) {
-  const candidates = [
-    snapshot?.day?.c,
-    snapshot?.prevDay?.c,
-    snapshot?.lastTrade?.p,
-    snapshot?.lastQuote?.p,
-    snapshot?.close,
-  ];
+function getRecentDateKeys(days) {
+  const now = new Date();
+  const keys = [];
 
-  return candidates.find((value) => typeof value === 'number') ?? null;
+  for (let index = 0; index < days; index += 1) {
+    const candidate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - index));
+    keys.push(toDateKey(candidate));
+  }
+
+  return keys;
 }
 
-async function fetchSnapshotChunk(symbols) {
-  const query = new URLSearchParams({
-    tickers: symbols.join(','),
-    apiKey: API_KEY,
-  });
+async function fetchGroupedCloseMapForDate(dateKey) {
+  const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
+  const response = await fetch(`${URL}/v2/aggs/grouped/locale/us/market/stocks/${dateKey}?${query.toString()}`);
 
-  const response = await fetch(`${URL}/v2/snapshot/locale/us/markets/stocks/tickers?${query.toString()}`);
   if (!response.ok) {
-    throw new Error(`Snapshot request failed with status ${response.status}`);
+    throw new Error(`Grouped request failed with status ${response.status}`);
   }
 
   const data = await response.json();
-  let snapshots = [];
-  if (Array.isArray(data.tickers)) {
-    snapshots = data.tickers;
-  } else if (Array.isArray(data.results)) {
-    snapshots = data.results;
-  }
+  const groupedRows = Array.isArray(data.results) ? data.results : [];
   const prices = {};
 
-  snapshots.forEach((snapshot) => {
-    const symbol = resolveSnapshotSymbol(snapshot);
-    const price = resolveSnapshotPrice(snapshot);
+  groupedRows.forEach((row) => {
+    const symbol = row?.T;
+    const price = row?.c;
 
     if (symbol && typeof price === 'number') {
       prices[symbol] = price;
@@ -66,14 +59,85 @@ async function fetchSnapshotChunk(symbols) {
   return prices;
 }
 
-async function fetchSnapshotPrices(symbols) {
+async function fetchGroupedPrices(symbols) {
+  const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
+  if (!uniqueSymbols.length) return {};
+  const symbolSet = new Set(uniqueSymbols);
+  const mergedPrices = {};
+  const dateKeys = getRecentDateKeys(GROUPED_LOOKBACK_DAYS);
+
+  for (const dateKey of dateKeys) {
+    let groupedPriceMap = {};
+
+    try {
+      groupedPriceMap = await fetchGroupedCloseMapForDate(dateKey);
+    } catch {
+      // Keep trying older dates for market-close gaps.
+      continue;
+    }
+
+    Object.entries(groupedPriceMap).forEach(([symbol, price]) => {
+      if (symbolSet.has(symbol) && typeof price === 'number' && mergedPrices[symbol] === undefined) {
+        mergedPrices[symbol] = price;
+      }
+    });
+
+    if (Object.keys(mergedPrices).length === uniqueSymbols.length) {
+      break;
+    }
+  }
+
+  return mergedPrices;
+}
+
+async function fetchPreviousClosePrice(symbol) {
+  const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
+  const response = await fetch(`${URL}/v2/aggs/ticker/${symbol}/prev?${query.toString()}`);
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const close = data?.results?.[0]?.c;
+  return typeof close === 'number' ? close : null;
+}
+
+async function fetchPrevClosePrices(symbols) {
+  const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
+  if (!uniqueSymbols.length) return {};
+  const priceMap = {};
+  const batches = chunkSymbols(uniqueSymbols, FALLBACK_SYMBOL_BATCH_SIZE);
+
+  for (const batch of batches) {
+    const results = await Promise.all(
+      batch.map(async (symbol) => {
+        const close = await fetchPreviousClosePrice(symbol);
+        return { symbol, close };
+      })
+    );
+
+    results.forEach(({ symbol, close }) => {
+      if (typeof close === 'number') {
+        priceMap[symbol] = close;
+      }
+    });
+  }
+
+  return priceMap;
+}
+
+async function fetchBulkPrices(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
 
-  const chunks = chunkSymbols(uniqueSymbols, SNAPSHOT_CHUNK_SIZE);
-  const chunkPriceMaps = await Promise.all(chunks.map((chunk) => fetchSnapshotChunk(chunk)));
+  const grouped = await fetchGroupedPrices(uniqueSymbols);
+  const missingSymbols = uniqueSymbols.filter((symbol) => grouped[symbol] === undefined);
 
-  return Object.assign({}, ...chunkPriceMaps);
+  if (!missingSymbols.length) {
+    return grouped;
+  }
+
+  const fallback = await fetchPrevClosePrices(missingSymbols);
+  return { ...grouped, ...fallback };
 }
 
 function formatPrice(value) {
@@ -133,15 +197,15 @@ function Home() {
     let cancelled = false;
     setRefreshingPrices(true);
 
-    async function refreshSnapshotPrices() {
+    async function refreshPrices() {
       try {
-        const freshPrices = await fetchSnapshotPrices(symbolsToRefresh);
+        const freshPrices = await fetchBulkPrices(symbolsToRefresh);
         if (cancelled) return;
 
         setPriceMap((prev) => ({ ...prev, ...freshPrices }));
         storePrices(freshPrices);
       } catch (error) {
-        console.error('Failed to refresh stock prices from snapshot API.', error);
+        console.error('Failed to refresh stock prices from bulk endpoints.', error);
       } finally {
         if (!cancelled) {
           setRefreshingPrices(false);
@@ -149,7 +213,7 @@ function Home() {
       }
     }
 
-    void refreshSnapshotPrices();
+    void refreshPrices();
 
     return () => {
       cancelled = true;
@@ -218,7 +282,7 @@ function Home() {
           <p className={styles.overline}>Market Overview</p>
           <h1 className={styles.title}>Active Stocks</h1>
           <p className={styles.subtitle}>
-            Prices are loaded in bulk from snapshot endpoints and cached locally for faster reloads.
+            Prices are loaded from bulk market data endpoints and cached locally for faster reloads.
           </p>
         </div>
         <div className={styles.metrics}>
