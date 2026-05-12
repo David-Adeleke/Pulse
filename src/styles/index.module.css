@@ -1,3 +1,4 @@
+/* Full-height landing page wrapper. */
 .page {
   min-height: 100vh;
   display: grid;
@@ -5,6 +6,7 @@
   padding: 2rem 1.25rem;
 }
 
+/* Hero card container. */
 .hero {
   width: min(940px, 100%);
   border: 1px solid var(--border);
@@ -14,6 +16,7 @@
   padding: clamp(1.5rem, 3.5vw, 3rem);
 }
 
+/* Small top label above headline. */
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -29,6 +32,7 @@
   margin-bottom: 1rem;
 }
 
+/* Main landing headline styling. */
 .title {
   font-size: clamp(2rem, 4.8vw, 3.65rem);
   line-height: 1.05;
@@ -37,6 +41,7 @@
   max-width: 12ch;
 }
 
+/* Supporting descriptive paragraph. */
 .subtitle {
   color: var(--text-secondary);
   line-height: 1.65;
@@ -45,6 +50,7 @@
   margin: 1rem 0 0;
 }
 
+/* Container for CTA buttons. */
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -52,6 +58,7 @@
   margin-top: 1.8rem;
 }
 
+/* Shared button styles for both CTA variants. */
 .primaryButton,
 .secondaryButton {
   text-decoration: none;
@@ -62,27 +69,32 @@
   transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
+/* Primary CTA visual style. */
 .primaryButton {
   background-color: var(--green);
   color: #05231a;
   border: 1px solid transparent;
 }
 
+/* Secondary CTA visual style. */
 .secondaryButton {
   border: 1px solid var(--border);
   color: var(--text-primary);
   background-color: rgba(255, 255, 255, 0.02);
 }
 
+/* Shared hover lift interaction for buttons. */
 .primaryButton:hover,
 .secondaryButton:hover {
   transform: translateY(-1px);
 }
 
+/* Secondary CTA hover border accent. */
 .secondaryButton:hover {
   border-color: var(--green-dim);
 }
 
+/* Grid of value/stat cards. */
 .stats {
   margin-top: 2rem;
   display: grid;
@@ -90,6 +102,7 @@
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
+/* Individual stat card appearance. */
 .statCard {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
@@ -97,12 +110,14 @@
   padding: 0.95rem;
 }
 
+/* Highlighted stat value text. */
 .statValue {
   font-family: var(--font-mono);
   font-size: 1.1rem;
   color: var(--green);
 }
 
+/* Supporting label text under each value. */
 .statLabel {
   margin: 0.45rem 0 0;
   color: var(--text-secondary);

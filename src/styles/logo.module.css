@@ -1,3 +1,4 @@
+/* Sticky top navigation wrapper. */
 .logoNavbar {
   display: flex;
   justify-content: space-between;
@@ -12,6 +13,7 @@
   z-index: 20;
 }
 
+/* Brand link styling. */
 .brand {
   text-decoration: none;
   color: var(--text-primary);
@@ -21,18 +23,21 @@
   align-items: center;
 }
 
+/* Inner brand row (icon + text). */
 .brandInner {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
+/* Brand icon size/alignment. */
 .brandIcon {
   width: 1.15rem;
   height: 1.15rem;
   display: block;
 }
 
+/* Brand wordmark typography. */
 .brandText {
   font-family: var(--font-mono);
   font-size: 1rem;
@@ -40,10 +45,12 @@
   letter-spacing: 0.12em;
 }
 
+/* Navigation container wrapper. */
 .navbarContainer {
   display: flex;
 }
 
+/* Navigation list layout. */
 .navbar {
   display: flex;
   list-style: none;
@@ -52,6 +59,7 @@
   padding: 0;
 }
 
+/* Base style for nav links. */
 .navLink {
   display: inline-block;
   text-decoration: none;
@@ -67,17 +75,20 @@
     border-color 0.2s ease;
 }
 
+/* Hover style for nav links. */
 .navLink:hover {
   color: var(--text-primary);
   background-color: rgba(255, 255, 255, 0.03);
 }
 
+/* Active-route nav link style. */
 .active {
   color: var(--green);
   border-color: rgba(0, 224, 158, 0.35);
   background-color: var(--green-dim);
 }
 
+/* Mobile hamburger button (hidden on desktop). */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -90,6 +101,7 @@
   z-index: 3;
 }
 
+/* Individual hamburger bars. */
 .hamburger span {
   width: 20px;
   height: 2px;
@@ -101,22 +113,27 @@
     opacity 0.2s ease;
 }
 
+/* First bar transforms into X (open state). */
 .hamburger.open span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
 
+/* Middle bar disappears in open state. */
 .hamburger.open span:nth-child(2) {
   opacity: 0;
 }
 
+/* Third bar transforms into X (open state). */
 .hamburger.open span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
 
+/* Mobile backdrop is disabled by default. */
 .backdrop {
   display: none;
 }
 
+/* Mobile menu behavior and layout changes. */
 @media (max-width: 720px) {
   .hamburger {
     display: flex;

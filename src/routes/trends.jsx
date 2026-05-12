@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import ComingSoon from '../components/coming-soon';
 
+// Trends page route (placeholder).
 export const Route = createFileRoute('/trends')({
   component: RouteComponent,
 })
 
+// Placeholder page content until trend analytics are ready.
 function RouteComponent() {
   return (
     <ComingSoon

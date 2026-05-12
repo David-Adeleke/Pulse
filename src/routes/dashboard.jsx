@@ -5,9 +5,14 @@ import { getCachedPrices, storePrices } from '../lib/price-cache';
 import { getCachedIndustries, normalizeIndustry, storeIndustries } from '../lib/ticker-metadata-cache';
 import styles from '../styles/dashboard.module.css';
 
+// Base URL for the upstream market data provider.
 const URL = 'https://api.massive.com';
+// API key used for all market/reference requests in this route.
 const API_KEY = '4jA3_qqxZqAX0gvE6qFzpKTeCh7vRxQw';
+// Number of symbols requested per page.
 const limit = 20;
+
+// cache age limit for prices is short since we want them to be relatively fresh, and we have fallback mechanisms to get reasonably recent prices for any missing symbols. industry data is more static, so we can afford to cache it for longer periods.
 const PRICE_CACHE_MAX_AGE_MS = 2 * 60 * 1000;
 const INDUSTRY_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const GROUPED_LOOKBACK_DAYS = 7;
@@ -17,6 +22,7 @@ const FALLBACK_BASE_DELAY_MS = 350;
 const FALLBACK_GAP_MS = 120;
 const INDUSTRY_LOOKUP_GAP_MS = 80;
 
+// cache for grouped close prices
 let groupedCloseMapCache = null;
 let groupedCloseMapCacheAt = 0;
 let groupedCloseMapPromise = null;
@@ -27,16 +33,19 @@ const TYPE_FILTERS = [
   { value: 'etf', label: 'ETFs' },
 ];
 
+// Promise-based delay helper for pacing API calls and backoff retries.
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
 
+// Convert a Date into YYYY-MM-DD (UTC) expected by grouped aggregate endpoints.
 function toDateKey(date) {
   return date.toISOString().slice(0, 10);
 }
 
+// Build recent date keys so we can try multiple days when market data is missing.
 function getRecentDateKeys(days) {
   const now = new Date();
   const keys = [];
@@ -49,15 +58,18 @@ function getRecentDateKeys(days) {
   return keys;
 }
 
+// Normalize provider-specific type strings into app-level values.
 function normalizeTickerType(rawType) {
   const type = String(rawType ?? '').toUpperCase();
   return type.includes('ETF') ? 'etf' : 'stock';
 }
 
+// User-friendly label for ticker type badge.
 function tickerTypeLabel(rawType) {
   return normalizeTickerType(rawType) === 'etf' ? 'ETF' : 'Stock';
 }
 
+// Fetch grouped close prices for a specific market date.
 async function fetchGroupedCloseMapForDate(dateKey) {
   const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
   const response = await fetch(`${URL}/v2/aggs/grouped/locale/us/market/stocks/${dateKey}?${query.toString()}`);
@@ -68,6 +80,7 @@ async function fetchGroupedCloseMapForDate(dateKey) {
 
   const data = await response.json();
   const groupedRows = Array.isArray(data.results) ? data.results : [];
+  // Map ticker symbol => close price.
   const prices = {};
 
   groupedRows.forEach((row) => {
@@ -82,6 +95,7 @@ async function fetchGroupedCloseMapForDate(dateKey) {
   return prices;
 }
 
+// Try recent dates until we find a non-empty grouped map.
 async function fetchLatestGroupedMarketMap() {
   const dateKeys = getRecentDateKeys(GROUPED_LOOKBACK_DAYS);
 
@@ -99,6 +113,7 @@ async function fetchLatestGroupedMarketMap() {
   return {};
 }
 
+// Cache grouped map in memory to avoid repeated expensive grouped requests.
 async function getGroupedMarketMap() {
   const now = Date.now();
   const hasFreshCache =
@@ -123,6 +138,7 @@ async function getGroupedMarketMap() {
   return groupedCloseMapPromise;
 }
 
+// Pull grouped prices for the requested symbol set.
 async function fetchGroupedPrices(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
@@ -140,6 +156,7 @@ async function fetchGroupedPrices(symbols) {
   return result;
 }
 
+// Parse Retry-After header in either seconds or HTTP-date format.
 function parseRetryAfterMs(response) {
   const raw = response.headers.get('Retry-After');
   if (!raw) return null;
@@ -156,6 +173,7 @@ function parseRetryAfterMs(response) {
   return delta > 0 ? delta : null;
 }
 
+// Fallback endpoint per symbol (with retry + backoff on transient failures).
 async function fetchPreviousClosePrice(symbol) {
   for (let attempt = 0; attempt < FALLBACK_MAX_RETRIES; attempt += 1) {
     const query = new URLSearchParams({ adjusted: 'true', apiKey: API_KEY });
@@ -180,6 +198,7 @@ async function fetchPreviousClosePrice(symbol) {
   return null;
 }
 
+// Sequentially fetch previous close prices for missing symbols.
 async function fetchPrevClosePrices(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
@@ -197,6 +216,9 @@ async function fetchPrevClosePrices(symbols) {
   return priceMap;
 }
 
+// Bulk price strategy:
+// 1) grouped endpoint for most symbols
+// 2) per-symbol previous close endpoint for missing symbols
 async function fetchBulkPrices(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
@@ -212,6 +234,7 @@ async function fetchBulkPrices(symbols) {
   return { ...grouped, ...fallback };
 }
 
+// Fetch and normalize industry metadata for one symbol.
 async function fetchIndustryForTicker(symbol) {
   const query = new URLSearchParams({ apiKey: API_KEY });
   const response = await fetch(`${URL}/v3/reference/tickers/${symbol}?${query.toString()}`);
@@ -224,6 +247,7 @@ async function fetchIndustryForTicker(symbol) {
   return normalizeIndustry(data?.results?.sic_description);
 }
 
+// Sequentially fetch industries to avoid sending burst requests.
 async function fetchIndustries(symbols) {
   const uniqueSymbols = [...new Set(symbols)].filter(Boolean);
   if (!uniqueSymbols.length) return {};
@@ -238,12 +262,15 @@ async function fetchIndustries(symbols) {
   return result;
 }
 
+// Display formatter for prices.
 function formatPrice(value) {
   return typeof value === 'number' ? `$${value.toLocaleString()}` : '—';
 }
 
+// Dashboard route definition and initial loader query.
 export const Route = createFileRoute('/dashboard')({
   component: Home,
+  // Keep loader data warm for 5 minutes.
   staleTime: 5 * 60 * 1000,
   loader: async () => {
     const response = await fetch(
@@ -256,6 +283,7 @@ export const Route = createFileRoute('/dashboard')({
 
     const data = await response.json();
 
+    // Return first page of symbols and provider next-page URL.
     return {
       stocks: Array.isArray(data.results) ? data.results : [],
       nextUrl: data.next_url,
@@ -263,25 +291,36 @@ export const Route = createFileRoute('/dashboard')({
   },
 });
 
+// Main dashboard page.
 function Home() {
+  // Initial route loader payload.
   const { stocks: initial, nextUrl: initialNextUrl } = Route.useLoaderData();
+  // Ensure stocks defaults to an array.
   const initialStocks = Array.isArray(initial) ? initial : [];
+  // Extract symbol list for initial cache lookups.
   const initialSymbols = initialStocks.map((stock) => stock.ticker);
+  // Core page state.
   const [stocks, setStocks] = useState(initialStocks);
+  // Price cache hydration on first render.
   const [priceMap, setPriceMap] = useState(() => getCachedPrices(initialSymbols, PRICE_CACHE_MAX_AGE_MS).cachedPrices);
+  // Industry cache hydration on first render.
   const [industryMap, setIndustryMap] = useState(
     () => getCachedIndustries(initialSymbols, INDUSTRY_CACHE_MAX_AGE_MS).cachedIndustries
   );
+  // Pagination/bookkeeping state.
   const [nextUrl, setNextUrl] = useState(initialNextUrl);
   const [urlHistory, setUrlHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  // Background refresh/loading flags.
   const [refreshingPrices, setRefreshingPrices] = useState(false);
   const [loadingIndustries, setLoadingIndustries] = useState(false);
+  // UI filter state.
   const [typeFilter, setTypeFilter] = useState('all');
   const [industryFilter, setIndustryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Refresh price data whenever current page symbols change.
   useEffect(() => {
     const symbols = stocks.map((stock) => stock.ticker);
 
@@ -292,6 +331,7 @@ function Home() {
     }
 
     const { cachedPrices, symbolsToRefresh } = getCachedPrices(symbols, PRICE_CACHE_MAX_AGE_MS);
+    // Merge known cached values immediately for fast paint.
     setPriceMap((prev) => ({ ...prev, ...cachedPrices }));
 
     if (!symbolsToRefresh.length) {
@@ -302,6 +342,7 @@ function Home() {
     let cancelled = false;
     setRefreshingPrices(true);
 
+    // Load fresh prices in the background and persist to cache.
     async function refreshPrices() {
       try {
         const freshPrices = await fetchBulkPrices(symbolsToRefresh);
@@ -320,11 +361,13 @@ function Home() {
 
     void refreshPrices();
 
+    // Prevent late async updates after effect cleanup.
     return () => {
       cancelled = true;
     };
   }, [stocks]);
 
+  // Refresh industry metadata whenever current page symbols change.
   useEffect(() => {
     const symbols = stocks.map((stock) => stock.ticker);
 
@@ -334,6 +377,7 @@ function Home() {
     }
 
     const { cachedIndustries, symbolsToRefresh } = getCachedIndustries(symbols, INDUSTRY_CACHE_MAX_AGE_MS);
+    // Merge any cached industries immediately.
     setIndustryMap((prev) => ({ ...prev, ...cachedIndustries }));
 
     if (!symbolsToRefresh.length) {
@@ -344,6 +388,7 @@ function Home() {
     let cancelled = false;
     setLoadingIndustries(true);
 
+    // Fetch missing/stale industry labels and persist them.
     async function refreshIndustries() {
       try {
         const freshIndustries = await fetchIndustries(symbolsToRefresh);
@@ -362,11 +407,13 @@ function Home() {
 
     void refreshIndustries();
 
+    // Prevent state updates if component unmounts mid-request.
     return () => {
       cancelled = true;
     };
   }, [stocks]);
 
+  // Build distinct industry dropdown options from visible page stocks.
   const industryOptions = useMemo(() => {
     const labels = new Set();
     stocks.forEach((stock) => {
@@ -375,12 +422,14 @@ function Home() {
     return [...labels].sort((a, b) => a.localeCompare(b));
   }, [stocks, industryMap]);
 
+  // Reset industry filter if current option no longer exists.
   useEffect(() => {
     if (industryFilter !== 'all' && !industryOptions.includes(industryFilter)) {
       setIndustryFilter('all');
     }
   }, [industryFilter, industryOptions]);
 
+  // Apply type, industry, and search filters to current page stocks.
   const filteredStocks = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -397,6 +446,7 @@ function Home() {
     });
   }, [stocks, typeFilter, industryFilter, searchTerm, industryMap]);
 
+  // Fetch one page from provider URL and update list/pagination cursor.
   async function fetchPage(url) {
     setLoading(true);
 
@@ -414,6 +464,7 @@ function Home() {
     }
   }
 
+  // Navigate forward using provider's next URL.
   async function nextPage() {
     if (!nextUrl) return;
 
@@ -428,6 +479,7 @@ function Home() {
     }
   }
 
+  // Navigate backward by replaying stored pagination history.
   async function prevPage() {
     if (urlHistory.length === 0) return;
 
@@ -450,10 +502,13 @@ function Home() {
     }
   }
 
+  // Metric: count currently visible symbols that already have a numeric price.
   const visiblePriceCount = filteredStocks.filter((stock) => typeof priceMap?.[stock.ticker] === 'number').length;
 
   return (
+    // Main dashboard layout container.
     <main className={styles.dashboardContainer}>
+      {/* Header: title + quick stats. */}
       <header className={styles.header}>
         <div>
           <p className={styles.overline}>Market Overview</p>
@@ -482,6 +537,7 @@ function Home() {
         </div>
       </header>
 
+      {/* Search + filter controls. */}
       <section className={styles.controlsPanel}>
         <div className={styles.searchBox}>
           <label htmlFor='ticker-search' className={styles.controlLabel}>
@@ -498,6 +554,7 @@ function Home() {
         </div>
 
         <div className={styles.filterRow}>
+          {/* Type segment buttons. */}
           <div className={styles.typeFilters} role='group' aria-label='Filter by ticker type'>
             {TYPE_FILTERS.map((option) => (
               <button
@@ -513,6 +570,7 @@ function Home() {
             ))}
           </div>
 
+          {/* Industry dropdown filter. */}
           <label className={styles.industryField}>
             <span className={styles.controlLabel}>Industry</span>
             <select
@@ -530,11 +588,13 @@ function Home() {
           </label>
         </div>
 
+        {/* Async status for industry metadata loading. */}
         <p className={styles.filterSummary}>
           {loadingIndustries ? 'Updating industries...' : 'Industry data ready'}
         </p>
       </section>
 
+      {/* Symbol cards (or empty state if filters remove all matches). */}
       <section className={styles.tickerContainer}>
         {filteredStocks.length === 0 ? (
           <article className={styles.emptyState}>
@@ -561,6 +621,7 @@ function Home() {
         )}
       </section>
 
+      {/* Pagination controls for provider pages. */}
       <div className={styles.pagination}>
         <button className={styles.pageBtn} onClick={prevPage} disabled={page === 1 || loading}>
           Prev

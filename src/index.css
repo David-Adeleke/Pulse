@@ -1,6 +1,9 @@
+/* Import project fonts from Google Fonts. */
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+/* Enable Tailwind CSS layers/utilities. */
 @import 'tailwindcss';
 
+/* Global design tokens used across all CSS modules. */
 :root {
   --bg: #080b0f;
   --surface: #0f1620;
@@ -14,18 +17,21 @@
   --font-mono: 'Space Mono', monospace;
 }
 
+/* Include pseudo-elements in box sizing calculations. */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+/* Ensure full-height layout roots. */
 html,
 body,
 #root {
   min-height: 100%;
 }
 
+/* Global body styling and background lighting effects. */
 body {
   margin: 0;
   background:
@@ -36,6 +42,7 @@ body {
   font-family: var(--font-body);
 }
 
+/* Default links inherit surrounding text color unless overridden locally. */
 a {
   color: inherit;
 }

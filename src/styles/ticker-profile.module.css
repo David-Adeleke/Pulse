@@ -1,9 +1,11 @@
+/* Main ticker profile page container. */
 .page {
   max-width: 980px;
   margin: 0 auto;
   padding: 2rem 1.2rem 3rem;
 }
 
+/* Back button style. */
 .back {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
@@ -17,11 +19,13 @@
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Back button hover state. */
 .back:hover {
   color: var(--green);
   border-color: rgba(0, 224, 158, 0.35);
 }
 
+/* Shared card shell for header and chart sections. */
 .headerCard,
 .chartCard {
   border: 1px solid var(--border);
@@ -30,10 +34,12 @@
   padding: 1.2rem;
 }
 
+/* Header card spacing. */
 .headerCard {
   margin-bottom: 1rem;
 }
 
+/* Ticker symbol typography. */
 .symbol {
   margin: 0;
   font-family: var(--font-mono);
@@ -42,12 +48,14 @@
   font-size: clamp(1.8rem, 4vw, 2.5rem);
 }
 
+/* Company name text style. */
 .company {
   margin: 0.55rem 0 0;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
+/* Chart header row layout. */
 .chartTop {
   display: flex;
   justify-content: space-between;
@@ -55,12 +63,14 @@
   margin-bottom: 1rem;
 }
 
+/* Chart title text style. */
 .chartTop p {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
+/* Optional chart metadata style. */
 .chartTop span {
   font-family: var(--font-mono);
   color: var(--text-secondary);
@@ -69,6 +79,7 @@
   letter-spacing: 0.08em;
 }
 
+/* Frame around SVG chart. */
 .chartFrame {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -76,6 +87,7 @@
   background-color: rgba(255, 255, 255, 0.01);
 }
 
+/* SVG chart sizing behavior. */
 .chart {
   width: 100%;
   height: auto;
@@ -83,12 +95,14 @@
   display: block;
 }
 
+/* Empty chart fallback message. */
 .emptyChart {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.88rem;
 }
 
+/* Responsive grid for key metrics. */
 .metricsGrid {
   margin-top: 1rem;
   display: grid;
@@ -96,6 +110,7 @@
   gap: 0.75rem;
 }
 
+/* Individual metric card style. */
 .metricCard {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -103,6 +118,7 @@
   padding: 0.9rem;
 }
 
+/* Metric label text. */
 .metricLabel {
   margin: 0;
   color: var(--text-secondary);
@@ -111,6 +127,7 @@
   letter-spacing: 0.09em;
 }
 
+/* Metric value text. */
 .metricValue {
   margin: 0.45rem 0 0;
   font-family: var(--font-mono);

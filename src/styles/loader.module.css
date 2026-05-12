@@ -1,3 +1,4 @@
+/* Full-screen overlay used during loading states. */
 .overlay {
     position: fixed;
     inset: 0;
@@ -10,6 +11,7 @@
     gap: 1.25rem;
 }
 
+/* Circular spinner ring with rotating border. */
 .spinner {
     width: 6rem;
     height: 6rem;
@@ -23,6 +25,7 @@
     justify-content: center;
 }
 
+/* Brand text displayed inside spinner. */
 .text {
     font-family: 'Space Mono', monospace;
     font-size: 1rem;
@@ -31,6 +34,7 @@
     letter-spacing: .1em;
 }
 
+/* Spinner rotation animation. */
 @keyframes spin {
     to {
         transform: rotate(360deg)

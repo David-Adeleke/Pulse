@@ -1,3 +1,4 @@
+/* Full-page centered placeholder layout. */
 .page {
   min-height: calc(100vh - 64px);
   display: grid;
@@ -5,6 +6,7 @@
   padding: 1.5rem;
 }
 
+/* Main placeholder content card. */
 .card {
   width: min(720px, 100%);
   border: 1px solid var(--border);
@@ -14,6 +16,7 @@
   text-align: center;
 }
 
+/* Small "Coming soon" badge style. */
 .kicker {
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -22,11 +25,13 @@
   color: var(--green);
 }
 
+/* Placeholder title text. */
 .title {
   margin: 0.75rem 0 0;
   font-size: clamp(1.5rem, 4vw, 2.2rem);
 }
 
+/* Placeholder description paragraph. */
 .description {
   margin: 0.75rem auto 0;
   color: var(--text-secondary);
@@ -34,6 +39,7 @@
   line-height: 1.6;
 }
 
+/* Action button row. */
 .actions {
   margin-top: 1.25rem;
   display: flex;
@@ -42,6 +48,7 @@
   gap: 0.7rem;
 }
 
+/* Shared action button base style. */
 .primaryButton,
 .secondaryButton {
   text-decoration: none;
@@ -52,11 +59,13 @@
   border: 1px solid transparent;
 }
 
+/* Primary action button style. */
 .primaryButton {
   background-color: var(--green);
   color: #05231a;
 }
 
+/* Secondary action button style. */
 .secondaryButton {
   color: var(--text-primary);
   border-color: var(--border);
