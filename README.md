@@ -1,16 +1,115 @@
-# React + Vite
+# PULSE.NG
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A focused stock market dashboard for quick symbol discovery, clean company profiles, and essential market metrics in one place.
 
-Currently, two official plugins are available:
+🔗 **Live app:** [pulse-seven-swart.vercel.app](https://pulse-seven-swart.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Overview
 
-## React Compiler
+PULSE.NG is a stock dashboard built for fast market checks rather than cluttered, data-heavy terminals. It surfaces active stocks and ETFs, lets users search and filter by type and industry, and gives each symbol a dedicated profile page with price trend charts and key metrics like open, close, day high, day low, market cap, and volume.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Preview
 
-## Expanding the ESLint configuration
+**Landing page**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+![PULSE.NG landing page](./src/assets/landing-hero.png)
+
+**Active stocks dashboard**
+
+![PULSE.NG active stocks listing](./src/assets/active-stocks.png)
+
+**Ticker profile page**
+
+![PULSE.NG ticker profile with price trend chart](./src/assets/ticker-profile.png)
+
+## Features
+
+- **Market Overview** – Live-updating snapshot of active symbols, with counts for total symbols, symbols with pricing, and price sync status
+- **Search & Filter** – Instant search by ticker or company name, with filters for stock type (Stocks / ETFs) and industry
+- **Ticker Profiles** – Dedicated page per symbol with a price trend chart and key metrics (close, open, day high, day low, market cap, volume)
+- **Portfolios** – Track and organize symbols of interest
+- **Market Trends** – Broader view of market movement beyond individual symbols
+- **Watchlist** – Save symbols for quick access
+- **Dark Mode Optimized UI** – Built for clarity during rapid market checks
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React |
+| Routing | TanStack Router |
+| Language | TypeScript |
+| Market Data | Polygon.io API |
+| Deployment | Vercel |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- A Polygon.io API key
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd pulse-ng
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Set up environment variables
+
+Create a `.env` file in the root directory:
+```
+VITE_POLYGON_API_KEY=your_polygon_api_key
+```
+
+4. Run the development server
+```bash
+npm run dev
+```
+
+## Project Structure
+
+```
+pulse-ng/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/           # Route-level page components (dashboard, ticker profile, etc.)
+│   ├── features/         # Feature-specific logic (search, filters, watchlist, portfolios)
+│   ├── lib/              # Polygon.io client and utility functions
+│   ├── hooks/            # Custom React hooks
+│   └── routes/           # TanStack Router route definitions
+└── public/
+```
+
+## Deployment
+
+PULSE.NG is deployed and live at **[pulse-seven-swart.vercel.app](https://pulse-seven-swart.vercel.app/)**.
+
+| Layer | Provider |
+|---|---|
+| Frontend | Vercel |
+| Market Data | Polygon.io |
+
+Pushing to the main branch triggers a new deployment on Vercel automatically. The Polygon.io API key is configured as an environment variable in the Vercel project settings rather than committed to the repo.
+
+## Roadmap
+
+- Custom watchlist alerts
+- Portfolio performance tracking
+- Historical data comparisons across symbols
+- Mobile-responsive polish
+
+## Contributing
+
+This project is currently maintained as a solo portfolio project. Feedback and suggestions are welcome through issues.
+
+## License
+
+MIT
